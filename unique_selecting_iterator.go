@@ -1,4 +1,4 @@
-package iterators
+package lezhnev74
 
 // UniqueSelectingIterator returns sorted values from two other iterators
 // Identical values are returned just once

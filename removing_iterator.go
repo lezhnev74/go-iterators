@@ -1,4 +1,4 @@
-package iterators
+package lezhnev74
 
 // RemovingIterator returns all from it1 that are not present in it2
 type RemovingIterator[T any] struct {

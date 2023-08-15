@@ -1,9 +1,35 @@
-package iterators
+package lezhnev74
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
+
+func TestCallbackError(t *testing.T) {
+	e := fmt.Errorf("callback failed")
+	s := NewCallbackIterator(
+		func() (any, error) { return nil, e },
+		func() error { return nil },
+	)
+
+	_, err := s.Next()
+	require.ErrorIs(t, err, e)
+}
+
+func TestCloseCallbackIterator(t *testing.T) {
+	var closed bool
+	s := NewCallbackIterator(
+		func() (string, error) { return "a", nil },
+		func() error {
+			closed = true
+			return nil
+		},
+	)
+	require.NoError(t, s.Close())
+	require.True(t, closed)
+	require.ErrorIs(t, s.Close(), ClosedIterator)
+}
 
 func TestCallbackIterator(t *testing.T) {
 	src := []string{"a", "b", "c"}
@@ -15,6 +41,6 @@ func TestCallbackIterator(t *testing.T) {
 		}
 		return "", EmptyIterator
 	}
-	it := NewCallbackIterator(cb)
+	it := NewCallbackIterator(cb, func() error { return nil })
 	require.EqualValues(t, []string{"a", "b", "c"}, ToSlice(it))
 }

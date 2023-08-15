@@ -1,10 +1,35 @@
-package iterators
+package lezhnev74
 
 import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
+
+func TestErrorFetch(t *testing.T) {
+	e := fmt.Errorf("fetch failed")
+	s := NewDynamicSliceIterator(
+		func() ([]string, error) { return nil, e },
+		func() error { return nil },
+	)
+
+	_, err := s.Next()
+	require.ErrorIs(t, err, e)
+}
+
+func TestCloseDynamicSliceIterator(t *testing.T) {
+	var closed bool
+	s := NewDynamicSliceIterator(
+		func() ([]string, error) { return []string{"a"}, nil },
+		func() error {
+			closed = true
+			return nil
+		},
+	)
+	require.NoError(t, s.Close())
+	require.True(t, closed)
+	require.ErrorIs(t, s.Close(), ClosedIterator)
+}
 
 func TestDynamicSliceIterator(t *testing.T) {
 	type test struct {
@@ -23,14 +48,14 @@ func TestDynamicSliceIterator(t *testing.T) {
 				expectedMergedSlice = append(expectedMergedSlice, sl...)
 			}
 
-			s := NewDynamicSliceIterator(func() []any {
+			s := NewDynamicSliceIterator(func() ([]any, error) {
 				if len(tt.sls) == 0 {
-					return nil
+					return nil, EmptyIterator
 				}
 				sl := tt.sls[0]
 				tt.sls = tt.sls[1:]
-				return sl
-			})
+				return sl, nil
+			}, func() error { return nil })
 			sl2 := make([]any, 0)
 			for {
 				v, err := s.Next()

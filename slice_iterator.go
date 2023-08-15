@@ -1,4 +1,4 @@
-package iterators
+package lezhnev74
 
 // SliceIterator implements Iterator over a static slice
 type SliceIterator[T any] struct {
