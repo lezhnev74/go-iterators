@@ -24,7 +24,7 @@ type Iterator[T any] interface {
 // CmpFunc returns -1,0,1 respectively if a<b,a=b,a>b
 type CmpFunc[T any] func(a, b T) int
 
-func orderedCmpFunc[T constraints.Ordered](a, b T) int {
+func OrderedCmpFunc[T constraints.Ordered](a, b T) int {
 	if a == b {
 		return 0
 	} else if a < b {

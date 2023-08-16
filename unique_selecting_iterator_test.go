@@ -9,7 +9,7 @@ import (
 func TestItClosesInnerIterators(t *testing.T) {
 	i1 := NewSliceIterator([]string{})
 	i2 := NewSliceIterator([]string{})
-	i3 := NewUniqueSelectingIterator[string](i1, i2, orderedCmpFunc[string])
+	i3 := NewUniqueSelectingIterator[string](i1, i2, OrderedCmpFunc[string])
 	require.NoError(t, i3.Close())
 	require.ErrorIs(t, i3.Close(), ClosedIterator)
 	require.ErrorIs(t, i1.Close(), ClosedIterator)
