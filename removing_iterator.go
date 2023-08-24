@@ -1,5 +1,7 @@
 package lezhnev74
 
+import "errors"
+
 // RemovingIterator returns all from it1 that are not present in it2
 type RemovingIterator[T any] struct {
 	it1, it2             Iterator[T]
@@ -16,15 +18,22 @@ func (s *RemovingIterator[T]) Close() error {
 	}
 	return s.it2.Close()
 }
-func (si *RemovingIterator[T]) fetch() {
+func (si *RemovingIterator[T]) fetch() error {
 	var err error
+
 	if !si.v1Fetched {
 		si.v1, err = si.it1.Next()
 		si.v1Fetched = err == nil
 	}
+	if err != nil && !errors.Is(err, EmptyIterator) {
+		return err
+	}
 	if !si.v2Fetched {
 		si.v2, err = si.it2.Next()
 		si.v2Fetched = err == nil
+	}
+	if err != nil && !errors.Is(err, EmptyIterator) {
+		return err
 	}
 
 	// check if both values present and collapse, fetch more if so
@@ -32,13 +41,22 @@ func (si *RemovingIterator[T]) fetch() {
 		r := si.cmp(si.v1, si.v2)
 		if r == 0 {
 			si.v1Fetched, si.v2Fetched = false, false
-			si.fetch()
+			err = si.fetch()
 		}
 	}
+	if err != nil && !errors.Is(err, EmptyIterator) {
+		return err
+	}
+
+	return nil
 }
 
 func (si *RemovingIterator[T]) Next() (v T, err error) {
-	si.fetch()
+	err = si.fetch()
+	if err != nil {
+		return
+	}
+
 	if si.v1Fetched {
 		si.v1Fetched = false
 		v = si.v1

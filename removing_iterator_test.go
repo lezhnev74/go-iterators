@@ -6,6 +6,21 @@ import (
 	"testing"
 )
 
+func TestItReturnsErrorFromInnerRemovingIterator(t *testing.T) {
+	expectedError := fmt.Errorf("inner error")
+	i1 := NewSliceIterator([]string{})
+	i2 := NewDynamicSliceIterator(
+		func() ([]string, error) {
+			return nil, expectedError
+		},
+		func() error { return nil },
+	)
+
+	i3 := NewRemovingIterator[string](i1, i2, OrderedCmpFunc[string])
+	_, err := i3.Next()
+	require.ErrorIs(t, err, expectedError)
+}
+
 func TestRemIteratorClosesInnerIterators(t *testing.T) {
 	i1 := NewSliceIterator([]string{})
 	i2 := NewSliceIterator([]string{})
