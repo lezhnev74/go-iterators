@@ -1,5 +1,7 @@
 package lezhnev74
 
+import "errors"
+
 // UniqueSelectingIterator returns sorted values from two other iterators
 // Identical values are returned just once
 type UniqueSelectingIterator[T any] struct {
@@ -17,20 +19,30 @@ func (s *UniqueSelectingIterator[T]) Close() error {
 	}
 	return s.it2.Close()
 }
-func (si *UniqueSelectingIterator[T]) fetch() {
+func (si *UniqueSelectingIterator[T]) fetch() error {
 	var err error
 	if !si.v1Fetched {
 		si.v1, err = si.it1.Next()
 		si.v1Fetched = err == nil
 	}
+	if err != nil && !errors.Is(err, EmptyIterator) {
+		return err
+	}
 	if !si.v2Fetched {
 		si.v2, err = si.it2.Next()
 		si.v2Fetched = err == nil
 	}
+	if err != nil && !errors.Is(err, EmptyIterator) {
+		return err
+	}
+	return nil
 }
 
 func (si *UniqueSelectingIterator[T]) Next() (v T, err error) {
-	si.fetch()
+	err = si.fetch()
+	if err != nil {
+		return
+	}
 
 	if !si.v1Fetched && !si.v2Fetched {
 		err = EmptyIterator
