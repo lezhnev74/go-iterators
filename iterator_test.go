@@ -1,4 +1,4 @@
-package lezhnev74
+package go_iterators
 
 import (
 	"github.com/stretchr/testify/require"

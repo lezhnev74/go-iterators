@@ -1,4 +1,4 @@
-package lezhnev74
+package go_iterators
 
 // DynamicSliceIterator implements Iterator over a dynamic slice
 // whenever it needs data it calls fetch() for a new slice to iterate

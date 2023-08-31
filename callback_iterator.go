@@ -1,4 +1,4 @@
-package lezhnev74
+package go_iterators
 
 type CallbackIterator[T any] struct {
 	cb       func() (T, error)
