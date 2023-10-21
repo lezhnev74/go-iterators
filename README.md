@@ -1,6 +1,7 @@
 # Go Iterators
 
 [![Go package](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml/badge.svg)](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml)
+[![Go Coverage](https://github.com/lezhnev74/go-iterators/wiki/coverage.svg)](https://raw.githack.com/wiki/lezhnev74/go-iterators/coverage.html)
 
 Since Go does not have a default iterator type (though there are
 discussions [here](https://bitfieldconsulting.com/golang/iterators), [here](https://github.com/golang/go/issues/61897)
