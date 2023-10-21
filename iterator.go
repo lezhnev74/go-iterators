@@ -2,7 +2,6 @@ package go_iterators
 
 import (
 	"errors"
-	"golang.org/x/exp/constraints"
 	"io"
 )
 
@@ -23,16 +22,6 @@ type Iterator[T any] interface {
 
 // CmpFunc returns -1,0,1 respectively if a<b,a=b,a>b
 type CmpFunc[T any] func(a, b T) int
-
-func OrderedCmpFunc[T constraints.Ordered](a, b T) int {
-	if a == b {
-		return 0
-	} else if a < b {
-		return -1
-	} else {
-		return 1
-	}
-}
 
 func ToSlice[T any](it Iterator[T]) (dump []T) {
 	for {

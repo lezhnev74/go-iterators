@@ -7,10 +7,24 @@ import (
 	"testing"
 )
 
+func TestItStopsIfInnerIteratorErrors(t *testing.T) {
+	badCall := fmt.Errorf("bad call")
+
+	i1 := NewSliceIterator([]string{})
+	i2 := NewDynamicSliceIterator(
+		func() ([]string, error) { return nil, badCall },
+		func() error { return nil },
+	)
+	i3 := NewSortedSelectingIterator[string](i1, i2, cmp.Compare[string])
+
+	_, err := i3.Next()
+	require.ErrorIs(t, err, badCall)
+}
+
 func TestItClosesInnerIterators_SortedSelector(t *testing.T) {
 	i1 := NewSliceIterator([]string{})
 	i2 := NewSliceIterator([]string{})
-	i3 := NewSortedSelectingIterator[string](i1, i2, OrderedCmpFunc[string])
+	i3 := NewSortedSelectingIterator[string](i1, i2, cmp.Compare[string])
 	require.NoError(t, i3.Close())
 	require.ErrorIs(t, i3.Close(), ClosedIterator)
 	require.ErrorIs(t, i1.Close(), ClosedIterator)

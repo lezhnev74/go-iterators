@@ -15,4 +15,7 @@ func TestMappingIterator(t *testing.T) {
 	mIt := NewMappingIterator(inner, mp)
 	out := ToSlice(mIt)
 	require.EqualValues(t, []string{"10", "20", "30", "40", "50"}, out)
+
+	require.NoError(t, mIt.Close())
+	require.ErrorIs(t, mIt.Close(), ClosedIterator)
 }

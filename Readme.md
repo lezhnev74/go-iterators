@@ -1,5 +1,7 @@
 # Go Iterators
 
+[![Go package](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml/badge.svg)](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml)
+
 Since Go does not have a default iterator type (though there are
 discussions [here](https://bitfieldconsulting.com/golang/iterators), [here](https://github.com/golang/go/issues/61897)
 and [there](https://ewencp.org/blog/golang-iterators/)), here is a set of different iterators crafted manually.

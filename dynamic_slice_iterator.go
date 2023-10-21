@@ -4,7 +4,7 @@ package go_iterators
 // whenever it needs data it calls fetch() for a new slice to iterate
 type DynamicSliceIterator[T any] struct {
 	values   []T
-	fetch    func() ([]T, error) // nil or empty slice leads to stopping iteration
+	fetch    func() ([]T, error) // nil or empty slice stops iteration
 	close    func() error
 	isClosed bool
 }

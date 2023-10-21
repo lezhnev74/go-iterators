@@ -26,6 +26,12 @@ func TestItClosesInnerIterators_BatchingIterator(t *testing.T) {
 	require.ErrorIs(t, i2.Close(), ClosedIterator)
 }
 
+func TestItPanicsOnLowBatchSize(t *testing.T) {
+	defer func() { _ = recover() }()
+	NewBatchingIterator[string](nil, 0)
+	t.Errorf("did not panic")
+}
+
 func TestBatchingIterator(t *testing.T) {
 	type test struct {
 		inner     []int

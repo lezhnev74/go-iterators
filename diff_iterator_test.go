@@ -1,6 +1,7 @@
 package go_iterators
 
 import (
+	"cmp"
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -16,7 +17,7 @@ func TestItReturnsErrorFromInnerRemovingIterator(t *testing.T) {
 		func() error { return nil },
 	)
 
-	i3 := NewRemovingIterator[string](i1, i2, OrderedCmpFunc[string])
+	i3 := NewRemovingIterator[string](i1, i2, cmp.Compare[string])
 	_, err := i3.Next()
 	require.ErrorIs(t, err, expectedError)
 }

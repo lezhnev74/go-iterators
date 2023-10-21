@@ -31,6 +31,18 @@ func TestCloseDynamicSliceIterator(t *testing.T) {
 	require.ErrorIs(t, s.Close(), ClosedIterator)
 }
 
+func TestItStopsIterationOnEmptyResultFromFetchFunc(t *testing.T) {
+	s := NewDynamicSliceIterator(
+		func() ([]any, error) { return nil, nil },
+		func() error { return nil },
+	)
+	_, err := s.Next()
+	require.ErrorIs(t, err, EmptyIterator)
+
+	_, err = s.Next() // Idempotency
+	require.ErrorIs(t, err, EmptyIterator)
+}
+
 func TestDynamicSliceIterator(t *testing.T) {
 	type test struct {
 		sls [][]any
