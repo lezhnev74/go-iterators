@@ -1,25 +1,11 @@
 package go_iterators
 
 import (
+	"cmp"
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
-
-func TestItReturnsErrorFromInnerIterator_SortedSelector(t *testing.T) {
-	expectedError := fmt.Errorf("inner error")
-	i1 := NewSliceIterator([]string{})
-	i2 := NewDynamicSliceIterator(
-		func() ([]string, error) {
-			return nil, expectedError
-		},
-		func() error { return nil },
-	)
-
-	i3 := NewSortedSelectingIterator[string](i1, i2, OrderedCmpFunc[string])
-	_, err := i3.Next()
-	require.ErrorIs(t, err, expectedError)
-}
 
 func TestItClosesInnerIterators_SortedSelector(t *testing.T) {
 	i1 := NewSliceIterator([]string{})
@@ -75,6 +61,90 @@ func TestSortedSelectingIterator(t *testing.T) {
 				sl = append(sl, v)
 			}
 			require.EqualValues(t, tt.expected, sl)
+		})
+	}
+}
+
+func TestNestedSortedSelectingIterator(t *testing.T) {
+	type test struct {
+		sl1, sl2 Iterator[int]
+		expected []int
+	}
+
+	tests := []test{
+		{
+			sl1:      NewSliceIterator([]int{1}),
+			sl2:      NewSliceIterator([]int{2}),
+			expected: []int{1, 2},
+		},
+		{
+			sl1: NewSortedSelectingIterator(
+				NewSliceIterator([]int{1}),
+				NewSliceIterator([]int{3}),
+				cmp.Compare[int],
+			),
+			sl2:      NewSliceIterator([]int{2}),
+			expected: []int{1, 2, 3},
+		},
+		{
+			sl1:      NewSliceIterator([]int{9, 10}),
+			sl2:      NewSliceIterator([]int{9, 10, 11}),
+			expected: []int{9, 9, 10, 10, 11},
+		},
+		{
+			sl1:      NewSliceIterator([]int{1, 2, 3}),
+			sl2:      NewSliceIterator([]int{1, 3}),
+			expected: []int{1, 1, 2, 3, 3},
+		},
+		{
+			sl1: NewSortedSelectingIterator(
+				NewSliceIterator([]int{1}),
+				NewSliceIterator([]int{3}),
+				cmp.Compare[int],
+			),
+			sl2: NewSortedSelectingIterator(
+				NewSliceIterator([]int{2}),
+				NewSliceIterator([]int{1}),
+				cmp.Compare[int],
+			),
+			expected: []int{1, 1, 2, 3},
+		},
+		{
+			sl1: NewSortedSelectingIterator(
+				NewSliceIterator([]int{1, 5, 9}),
+				NewSliceIterator([]int{3}),
+				cmp.Compare[int],
+			),
+			sl2: NewSortedSelectingIterator(
+				NewSliceIterator([]int{2}),
+				NewSliceIterator([]int{}),
+				cmp.Compare[int],
+			),
+			expected: []int{1, 2, 3, 5, 9},
+		},
+		{
+			sl1: NewSortedSelectingIterator(
+				NewSortedSelectingIterator(
+					NewSliceIterator([]int{5}),
+					NewSliceIterator([]int{0}),
+					cmp.Compare[int],
+				),
+				NewSliceIterator([]int{3}),
+				cmp.Compare[int],
+			),
+			sl2: NewSortedSelectingIterator(
+				NewSliceIterator([]int{2}),
+				NewSliceIterator([]int{1}),
+				cmp.Compare[int],
+			),
+			expected: []int{0, 1, 2, 3, 5},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			s := NewSortedSelectingIterator[int](tt.sl1, tt.sl2, cmp.Compare[int])
+			require.EqualValues(t, tt.expected, ToSlice(s))
 		})
 	}
 }

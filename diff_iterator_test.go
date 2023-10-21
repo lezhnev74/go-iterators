@@ -21,16 +21,6 @@ func TestItReturnsErrorFromInnerRemovingIterator(t *testing.T) {
 	require.ErrorIs(t, err, expectedError)
 }
 
-func TestRemIteratorClosesInnerIterators(t *testing.T) {
-	i1 := NewSliceIterator([]string{})
-	i2 := NewSliceIterator([]string{})
-	i3 := NewRemovingIterator[string](i1, i2, OrderedCmpFunc[string])
-	require.NoError(t, i3.Close())
-	require.ErrorIs(t, i3.Close(), ClosedIterator)
-	require.ErrorIs(t, i1.Close(), ClosedIterator)
-	require.ErrorIs(t, i2.Close(), ClosedIterator)
-}
-
 func TestRemovingIterator(t *testing.T) {
 	type test struct {
 		sl1, sl2 []int

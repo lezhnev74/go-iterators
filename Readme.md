@@ -33,4 +33,5 @@ io.Closer
     - `UniqueSelectingIterator` The same as `SelectingIterator` but removes duplicates.
     - `RemovingIterator` combines 2 sorted iterators and removes values from one that is present in the second.
       Effectively that is a set difference.
+    - `SortedSelectingIterator` combines 2 sorted iterators into a single sorted iterator. 
 
