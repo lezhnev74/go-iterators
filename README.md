@@ -1,6 +1,6 @@
 # Go Iterators
 
-[![Go package](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml/badge.svg)](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml)
+[![Go Build](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml/badge.svg)](https://github.com/lezhnev74/go-iterators/actions/workflows/go.yml)
 [![Go Coverage](https://github.com/lezhnev74/go-iterators/wiki/coverage.svg)](https://raw.githack.com/wiki/lezhnev74/go-iterators/coverage.html)
 
 Since Go does not have a default iterator type (though there are
@@ -16,25 +16,37 @@ experimental standalone package), there is this package.
 // Iterator is used for working with sequences of possibly unknown size
 // Interface adds a performance penalty for indirection.
 type Iterator[T any] interface {
-// Next returns EmptyIterator when no value available at the source
-// error == nil means the returned value is good
-Next() (T, error)
-// The client may decide to stop the iteration before EmptyIterator recieved
-// Closed iterator may panic
-io.Closer
+  // Next returns EmptyIterator when no value available at the source
+  // error == nil means the returned value is good
+  Next() (T, error)
+  // Closer the client may decide to stop the iteration before EmptyIterator received
+  // After the first call it must return ClosedIterator.
+  io.Closer
 }
 ```
 
 ## Various Iterators
 
-- `CallbackIterator` calls a callback to fetch the next value
+Single iterators
+- `CallbackIterator` calls a function to provide the next value
 - `SliceIterator` iterates over a static precalculated slice
 - `DynamicSliceIterator` behaves like `SliceIterator` but fetches a new slice when previous slice is "empty"
-- Selection-tree iterators (only for sorted iterators). Selecting iterators are to form a selection tree that helps
-  efficiently merge sorted values with the least number of compare operations.
-    - `SelectingIterator` combines 2 sorted iterators. Effectively that is a set union.
-    - `UniqueSelectingIterator` The same as `SelectingIterator` but removes duplicates.
-    - `RemovingIterator` combines 2 sorted iterators and removes values from one that is present in the second.
-      Effectively that is a set difference.
-    - `SortedSelectingIterator` combines 2 sorted iterators into a single sorted iterator. 
 
+Compound iterators
+
+Unary:
+- `ClosingIterator` adds custom Closing logic on top of another iterator
+- `BatchingIterator` buffers internal iterator and returns slices of values
+- `FilteringIterator` filters values from internal iterator 
+- `MappingIterator` maps values from the inner iterator
+
+Binary:
+- `SortedSelectingIterator` combines 2 sorted iterators into a single sorted iterator.
+- `UniqueSelectingIterator` The same as `SelectingIterator` but removes duplicates.
+- `DiffIterator` returns all from the first iterator that is not present in the second
+
+## Design notes
+
+- compound iterators proxy errors from internal iterators
+- compound iterators close internal iterators upon emptying
+- compound binary iterators enable making efficient selection trees

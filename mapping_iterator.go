@@ -1,5 +1,6 @@
 package go_iterators
 
+// MappingIterator maps values from the inner iterator
 type MappingIterator[T any, InnerT any] struct {
 	innerIterator Iterator[InnerT]
 	mf            func(InnerT) T

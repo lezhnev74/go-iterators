@@ -1,5 +1,6 @@
 package go_iterators
 
+// CallbackIterator calls a function to provide the next value
 type CallbackIterator[T any] struct {
 	cb       func() (T, error)
 	close    func() error

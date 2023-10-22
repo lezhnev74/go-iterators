@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// BatchingIterator buffers internal iterator and returns slices of values
 type BatchingIterator[T any] struct {
 	innerIterator Iterator[T]
 	batchSize     int

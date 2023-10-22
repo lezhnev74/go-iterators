@@ -1,5 +1,6 @@
 package go_iterators
 
+// ClosingIterator adds custom Closing logic on top of another iterator
 type ClosingIterator[T any] struct {
 	innerIterator Iterator[T]
 	// extra function called AFTER "innerErr := Close()" returns

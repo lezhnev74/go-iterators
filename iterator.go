@@ -16,7 +16,7 @@ type Iterator[T any] interface {
 	// error == nil means the returned value is good
 	Next() (T, error)
 	// Closer the client may decide to stop the iteration before EmptyIterator received
-	// Closed iterator may panic. After the first call it must return ClosedIterator.
+	// After the first call it must return ClosedIterator.
 	io.Closer
 }
 

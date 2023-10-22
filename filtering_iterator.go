@@ -1,5 +1,6 @@
 package go_iterators
 
+// FilteringIterator filters values from internal iterator
 type FilteringIterator[T any] struct {
 	innerIterator Iterator[T]
 	filter        func(T) bool
