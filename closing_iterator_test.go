@@ -6,6 +6,20 @@ import (
 	"testing"
 )
 
+func TestCloseClosingIterator(t *testing.T) {
+	var closed bool
+	s := NewClosingIterator(
+		NewSliceIterator([]string{}),
+		func(innerErr error) error {
+			closed = true
+			return innerErr
+		},
+	)
+	require.NoError(t, s.Close())
+	require.True(t, closed)
+	require.ErrorIs(t, s.Close(), ClosedIterator)
+}
+
 func TestClosingIterator(t *testing.T) {
 	var closed int
 	innerErr := fmt.Errorf("inner error")
