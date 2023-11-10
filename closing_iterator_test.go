@@ -20,6 +20,23 @@ func TestCloseClosingIterator(t *testing.T) {
 	require.ErrorIs(t, s.Close(), ClosedIterator)
 }
 
+func TestCloseOnClosedInnerIterator(t *testing.T) {
+	var closed bool
+
+	i1 := NewSliceIterator([]string{})
+	i2 := NewClosingIterator(
+		i1,
+		func(innerErr error) error {
+			closed = true
+			return innerErr
+		},
+	)
+	require.NoError(t, i1.Close())
+	require.NoError(t, i2.Close())
+	require.True(t, closed)
+	require.ErrorIs(t, i2.Close(), ClosedIterator)
+}
+
 func TestClosingIterator(t *testing.T) {
 	var closed int
 	innerErr := fmt.Errorf("inner error")

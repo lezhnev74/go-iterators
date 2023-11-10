@@ -1,5 +1,7 @@
 package go_iterators
 
+import "errors"
+
 // ClosingIterator adds custom Closing logic on top of another iterator
 type ClosingIterator[T any] struct {
 	innerIterator Iterator[T]
@@ -19,8 +21,10 @@ func (c *ClosingIterator[T]) Close() error {
 	err := c.innerIterator.Close()
 	err = c.close(err)
 
-	if err == nil {
-		c.isClosed = true // if closing returned an error -> do not consider the iterator as closed.
+	// Close it if no errors happened or if the inner iterator has been closed already
+	if err == nil || errors.Is(err, ClosedIterator) {
+		c.isClosed = true
+		err = nil
 	}
 
 	return err
