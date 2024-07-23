@@ -33,3 +33,13 @@ func ToSlice[T any](it Iterator[T]) (dump []T) {
 	}
 	return
 }
+
+// IteratorCache keeps the topmost value from the iterator.
+type IteratorCache[T any] struct {
+	// internal wrapped iterator
+	it Iterator[T]
+	// topmost fetched value
+	v T
+	// when the value is merged, this flag is set to signify the need of a fetch
+	pending bool
+}

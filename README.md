@@ -16,18 +16,19 @@ experimental standalone package), there is this package.
 // Iterator is used for working with sequences of possibly unknown size
 // Interface adds a performance penalty for indirection.
 type Iterator[T any] interface {
-  // Next returns EmptyIterator when no value available at the source
-  // error == nil means the returned value is good
-  Next() (T, error)
-  // Closer the client may decide to stop the iteration before EmptyIterator received
-  // After the first call it must return ClosedIterator.
-  io.Closer
+// Next returns EmptyIterator when no value available at the source
+// error == nil means the returned value is good
+Next() (T, error)
+// Closer the client may decide to stop the iteration before EmptyIterator received
+// After the first call it must return ClosedIterator.
+io.Closer
 }
 ```
 
 ## Various Iterators
 
 Single iterators
+
 - `CallbackIterator` calls a function to provide the next value
 - `SliceIterator` iterates over a static precalculated slice
 - `DynamicSliceIterator` behaves like `SliceIterator` but fetches a new slice when previous slice is "empty"
@@ -35,15 +36,22 @@ Single iterators
 Compound iterators
 
 Unary:
+
 - `ClosingIterator` adds custom Closing logic on top of another iterator
 - `BatchingIterator` buffers internal iterator and returns slices of values
-- `FilteringIterator` filters values from internal iterator 
+- `FilteringIterator` filters values from internal iterator
 - `MappingIterator` maps values from the inner iterator
 
 Binary:
+
 - `SortedSelectingIterator` combines 2 sorted iterators into a single sorted iterator.
 - `UniqueSelectingIterator` The same as `SelectingIterator` but removes duplicates.
 - `DiffIterator` returns all from the first iterator that is not present in the second
+
+N-ary:
+
+- `MergingIterator` combines N sorted iterator and allows merging of equal values. Merging and Cmp funcs must be
+  provided.
 
 ## Design notes
 
