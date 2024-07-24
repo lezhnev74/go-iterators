@@ -10,19 +10,14 @@ import (
 // When all readers return EOF, so does this iterator.
 type MergingIterator[T any] struct {
 	// buf contains topmost value for each reader,
-	// when reader returns EOF, it is removed from the buf
-	buf []IteratorCache[T]
+	// when reader is exhausted, it is removed from the buf
+	buf []*IteratorCache[T]
 	cmp CmpFunc[T]
 	// merge accepts equal values and merges them into a new value
 	merge func(a, b T) T
 }
 
 func (mi *MergingIterator[T]) Next() (merged T, err error) {
-
-	// It fetches from all readers into the buffer.
-	// Whenever the value is pending the reader is marked as pending.
-	// Pending readers are fetched on each run until exhausted.
-	// When no readers left, it returns EOF.
 
 	// 1. Fetch values from pending iterators
 	err = mi.fetch()
@@ -37,14 +32,14 @@ func (mi *MergingIterator[T]) Next() (merged T, err error) {
 	}
 
 	// 2. Sort fetched values
-	slices.SortFunc(mi.buf, func(a, b IteratorCache[T]) int {
+	slices.SortFunc(mi.buf, func(a, b *IteratorCache[T]) int {
 		return mi.cmp(a.v, b.v)
 	})
 
-	// 3. Merge the first term
+	// 3. Merge equal values
 	for i := range mi.buf {
 		if i == 0 {
-			merged = mi.buf[i].v // the first term goes out
+			merged = mi.buf[i].v // the first value goes out
 			mi.buf[i].pending = true
 			continue
 		}
@@ -52,7 +47,7 @@ func (mi *MergingIterator[T]) Next() (merged T, err error) {
 		if mi.cmp(merged, mi.buf[i].v) != 0 {
 			break // a non-equal value will go out next time
 		}
-		merged = mi.merge(merged, mi.buf[i].v) // another equal term is pending
+		merged = mi.merge(merged, mi.buf[i].v) // another equal value is pending
 		mi.buf[i].pending = true
 	}
 
@@ -74,11 +69,14 @@ func (mi *MergingIterator[T]) Close() (err error) {
 func (mi *MergingIterator[T]) fetch() (err error) {
 	var i int
 	for j, rc := range mi.buf {
+		mi.buf[j] = nil // gc
+
 		if !rc.pending {
 			mi.buf[i] = rc // keep in the buf
 			i++
 			continue
 		}
+
 		rc.v, err = rc.it.Next()
 		if err == nil {
 			rc.pending = false // just fetched
@@ -87,9 +85,7 @@ func (mi *MergingIterator[T]) fetch() (err error) {
 			continue
 		}
 		if errors.Is(err, EmptyIterator) {
-			// exhausted normally
-			err = rc.it.Close()
-			mi.buf[j].it = nil // gc
+			err = rc.it.Close() // exhausted normally
 			continue
 		}
 		return err // something bad happened in the underlying iterator
@@ -99,9 +95,9 @@ func (mi *MergingIterator[T]) fetch() (err error) {
 }
 
 func NewMergingIterator[T any](srcs []Iterator[T], cmpf CmpFunc[T], merge func(a, b T) T) *MergingIterator[T] {
-	buf := make([]IteratorCache[T], 0, len(srcs))
+	buf := make([]*IteratorCache[T], 0, len(srcs))
 	for _, it := range srcs {
-		buf = append(buf, IteratorCache[T]{it: it, pending: true})
+		buf = append(buf, &IteratorCache[T]{it: it, pending: true})
 	}
 
 	return &MergingIterator[T]{

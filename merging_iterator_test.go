@@ -2,6 +2,7 @@ package go_iterators
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/require"
@@ -92,4 +93,24 @@ func TestItReturnsErrorFromInnerMergingIterator(t *testing.T) {
 	i3 := NewMergingIterator[TermValues]([]Iterator[TermValues]{i1, i2}, CompareTermValues, MergeTermValues)
 	_, err := i3.Next()
 	require.ErrorIs(t, err, expectedError)
+}
+
+func TestClosesInternalIterators(t *testing.T) {
+	i1 := NewSliceIterator([]TermValues{})
+	i2 := NewSliceIterator([]TermValues{})
+	i3 := NewMergingIterator[TermValues]([]Iterator[TermValues]{i1, i2}, CompareTermValues, MergeTermValues)
+	err := i3.Close()
+	require.NoError(t, err)
+	err = i3.Close()
+	require.ErrorIs(t, err, ClosedIterator)
+}
+
+func TestClosesInternalIteratorsBeforeEmpty(t *testing.T) {
+	i1 := NewSliceIterator([]int{1})
+	i2 := NewSliceIterator([]int{2})
+	i3 := NewMergingIterator[int]([]Iterator[int]{i1, i2}, cmp.Compare[int], func(a, b int) int { return a })
+	err := i3.Close()
+	require.NoError(t, err)
+	err = i3.Close()
+	require.ErrorIs(t, err, ClosedIterator)
 }
