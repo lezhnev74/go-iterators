@@ -14,7 +14,8 @@ type MergingIterator[T any] struct {
 	buf []*IteratorCache[T]
 	cmp CmpFunc[T]
 	// merge accepts equal values and merges them into a new value
-	merge func(a, b T) T
+	merge    func(a, b T) T
+	isClosed bool
 }
 
 func (mi *MergingIterator[T]) Next() (merged T, err error) {
@@ -55,12 +56,20 @@ func (mi *MergingIterator[T]) Next() (merged T, err error) {
 }
 
 func (mi *MergingIterator[T]) Close() (err error) {
-	for _, rc := range mi.buf {
+	if mi.isClosed {
+		return ClosedIterator
+	}
+	for i, rc := range mi.buf {
+		if rc == nil {
+			continue
+		}
 		lastErr := rc.it.Close()
 		if lastErr != nil && err == nil {
 			err = lastErr // remember the first one
 		}
+		mi.buf[i] = nil // gc
 	}
+	mi.isClosed = true
 	return
 }
 
@@ -69,6 +78,10 @@ func (mi *MergingIterator[T]) Close() (err error) {
 func (mi *MergingIterator[T]) fetch() (err error) {
 	var i int
 	for j, rc := range mi.buf {
+		if mi.buf[j] == nil {
+			continue
+		}
+
 		mi.buf[j] = nil // gc
 
 		if !rc.pending {

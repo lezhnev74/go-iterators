@@ -90,9 +90,18 @@ func TestItReturnsErrorFromInnerMergingIterator(t *testing.T) {
 		func() error { return nil },
 	)
 
+	// exhaust until empty and close
 	i3 := NewMergingIterator[TermValues]([]Iterator[TermValues]{i1, i2}, CompareTermValues, MergeTermValues)
-	_, err := i3.Next()
-	require.ErrorIs(t, err, expectedError)
+	for {
+		_, err := i3.Next()
+		if errors.Is(err, EmptyIterator) {
+			break
+		}
+		require.ErrorIs(t, err, expectedError)
+	}
+
+	require.NoError(t, i3.Close())
+	require.ErrorIs(t, i3.Close(), ClosedIterator)
 }
 
 func TestClosesInternalIterators(t *testing.T) {
